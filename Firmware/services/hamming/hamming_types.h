@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define BIT_SET(val,bit) ((val) | (1UL << (bit)))
 #define BIT_CLEAR(val,bit) ((val) & ~(1UL << (bit)))
@@ -17,7 +18,7 @@ typedef enum HammingType {
 } HammingType_e;
 
 typedef struct HammingConfig {
-    HammingType type;
+    HammingType_e type;
     uint8_t total_bits;
     uint8_t data_bits;
     uint8_t parity_bits;

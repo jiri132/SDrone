@@ -1,5 +1,4 @@
 #include "hamming.h" 
-#include <stdbool.h>
 
 #define TOTAL_CONFIGS 6
 
