@@ -1,0 +1,17 @@
+idf_component_register(
+  SRCS "main.c"
+       "utils/debug.c"
+       "services/circularbuffer/circularbuffer.c"
+       "services/hamming/hamming.c"
+       "services/protocol/protocol_handler.c"
+       "hal/gpio/gpio.c"
+  INCLUDE_DIRS "core"
+               "hal/gpio"
+               "hal/irq"
+               "hal/spi"
+               "hal/sx1278"
+               "services/circularbuffer"
+               "services/hamming"
+               "services/protocol"
+               "utils"
+)
