@@ -1,52 +1,19 @@
-#pragma once 
+#pragma once
+#include "spi_types.h"
 #include <stdint.h>
-#include <stdbool.h>
 
-// -- Regio: Defines en constanten --
 
-/**
- * \brief SPI2 (HSPI) base address in DPORT memory (GPIO-subsystem).
- * Voor SPI3 (VSPI) zou dit 0x3FF65000 zijn.
- */
-#define DR_REG_SPI2_BASE 0x3FF64000
-
-// Register offsets ten opzichte van DR_REG_SPI2_BASE.
-// In de TRM zie je bijv. “0x0” voor CMD_REG, “0x4” voor CTRL_REG, etc. 
-#define SPI_CMD_REG_OFFSET          0x000
-#define SPI_ADDR_REG_OFFSET         0x004
-#define SPI_CTRL_REG_OFFSET         0x008
-#define SPI_CLOCK_REG_OFFSET        0x00C
-#define SPI_USER_REG_OFFSET         0x010
-#define SPI_USER1_REG_OFFSET        0x014
-#define SPI_USER2_REG_OFFSET        0x018
-#define SPI_MS_DLEN_REG_OFFSET      0x024  // Hier stel je MOSI/MISO bit-length in
-#define SPI_W0_REG_OFFSET           0x040  // W0 t/m W15 (0x40 - 0x7C)
-  // ...
-  // Afhankelijk van wat je nodig hebt, kun je offsets voor meer registers definieren.
-
-// -- Regio: Register access macros --
-static inline volatile uint32_t* SPI2_REG(uint32_t offset) {
-    return (volatile uint32_t *)(DR_REG_SPI2_BASE + offset);
-}
-
-// Voor een complexere setup kun je er ook voor kiezen om #defines te maken:
-// #define SPI2_CMD_REG     (*(volatile uint32_t *)(DR_REG_SPI2_BASE + SPI_CMD_REG_OFFSET))
-// enzovoort.
-
-// -- Regio: Functie-declaraties --
 
 /**
- * \brief Init SPI2 in master mode, met bepaalde klokinstellingen, CPOL/CPHA, enz.
+ * @brief Initialize the SPI peripheral.
+ * @param mode The SPI mode (0-3). For the SX1278, mode 0 is recommended.
+ * @param clock_divider The divider value to generate the SPI clock (e.g., divider value that gives ~5-10MHz).
  */
-void spi_init(void);
+void spi_init(spi_mode_e mode, uint16_t clock_divider);
 
 /**
- * \brief Simpele blocking transfer van N bits (of bytes). 
- * Let op: dit is slechts een basis; je kunt nog DMA, adresfases etc. toevoegen.
- * 
- * \param data_out  pointer naar TX-data (mag NULL zijn als alleen RX)
- * \param data_in   pointer waar RX moet komen (mag NULL zijn als alleen TX)
- * \param bit_len   aantal bits dat verstuurd/ontvangen moet worden
+ * @brief Transfer a 32-bit word over SPI.
+ * @param outdata The 32-bit data to send.
+ * @return The 32-bit data received from the SPI slave.
  */
-void spi_transfer(const uint8_t* data_out, uint8_t* data_in, uint32_t bit_len);
-
+uint32_t spi_transfer(uint32_t outdata);

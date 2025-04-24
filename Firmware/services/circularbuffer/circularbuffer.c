@@ -1,6 +1,6 @@
 #include "circularbuffer.h"
 
-#include <stdio.h>
+#include <stdlib.h>
 #include "configuration.h"
 
 typedef struct CircularBuffer {

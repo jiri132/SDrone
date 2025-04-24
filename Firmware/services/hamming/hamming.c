@@ -1,5 +1,5 @@
 #include "hamming.h" 
-
+#include <stddef.h>
 #define TOTAL_CONFIGS 6
 
 static const HammingConfig_t hamming_configs[TOTAL_CONFIGS] = {

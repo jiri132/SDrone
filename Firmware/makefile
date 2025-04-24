@@ -1,74 +1,56 @@
-### === CONFIGURATION ===
-# Toolchain setup
-CC := xtensa-esp32-elf-gcc
-AR := xtensa-esp32-elf-ar
-RANLIB := xtensa-esp32-elf-ranlib
-CFLAGS := -Wall -Wextra -std=c11 -Os
-LDFLAGS :=
+# Toolchain & tools
+CC = xtensa-esp32-elf-gcc
+ESPTOOL = esptool.exe
 
-# Flashing configuration
-PORT ?= COM5
+# Port config
+PORT ?= COM7
 BAUD ?= 460800
-BIN := firmware.elf
 
-# Directory and file structure
-SRC_DIRS := core hal\gpio hal\irq hal\spi hal\lora services\circularbuffer services\protocol services\hamming utils
-BUILD_DIR := build
-OBJ_DIR := $(BUILD_DIR)\obj
-MOD_DIR := $(BUILD_DIR)\modules
+# Source structure
+SRC_DIRS = core hal/gpio hal/irq hal/spi hal/sx1278 services/circularbuffer services/hamming services/protocol utils
+BUILD_DIR = build
 
-# List of modules to bundle
-MODULES := core gpio irq spi lora circularbuffer protocol hamming utils
-ARCHIVES := $(foreach mod,$(MODULES),$(MOD_DIR)/$(mod).a)
+# Flags
+CFLAGS = -Os -Wall -std=c11 -ffunction-sections -fdata-sections -mlongcalls -nostdlib -Wno-unused-parameter -T linker.ld
+LDFLAGS = -Wl,--gc-sections -Wl,--start-group -lc -lm -Wl,--end-group
+INCLUDES = $(foreach dir,$(SRC_DIRS),-I$(dir))
 
-# Main file (outside structure)
-MAIN_SRC := main.c
-MAIN_OBJ := $(OBJ_DIR)/main.o
+# Targets
+TARGET = firmware.elf
+IMAGE = firmware-0x10000.bin
 
-.PHONY: all clean flash
+# Source and object files
+SRC = $(wildcard $(addsuffix /*.c, $(SRC_DIRS))) main.c startup.c
+OBJ = $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRC))
 
-### === BUILD RULES ===
+# Default build
+all: $(IMAGE)
 
-all: $(BIN)
+# ELF
+$(TARGET): $(OBJ)
+	$(CC) $(OBJ) -o $@ $(CFLAGS) $(LDFLAGS)
 
-# Final binary from all archives and main.o
-$(BIN): $(ARCHIVES) $(MAIN_OBJ)
-	$(CC) $(LDFLAGS) -o $@ $^
+# BIN
+$(IMAGE): $(TARGET)
+	$(ESPTOOL) --chip esp32 elf2image -o $(IMAGE) $(TARGET)
 
-# Rule to archive all .o files in each folder into a .a archive
-$(MOD_DIR)/%.a:
-	@mkdir "$(MOD_DIR)" 2>NUL || exit 0
-	$(AR) rcs $@ $(wildcard $(OBJ_DIR)\$*\*.o)
-	$(RANLIB) $@
+# Compile objects
+$(BUILD_DIR)/%.o: %.c
+	@if not exist "$(dir $@)" mkdir "$(dir $@)"
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-# Compile each .c file into a .o file (excluding main.c)
-SRCS := \
-	$(foreach dir,$(SRC_DIRS),$(wildcard $(dir)\*.c))
-OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRCS))
+# Upload just firmware
+upload: $(IMAGE)
+	$(ESPTOOL) --chip esp32 --port $(PORT) --baud $(BAUD) write_flash -z 0x10000 $(IMAGE)
 
-$(OBJ_DIR)/%.o : %.c
-	@mkdir "$(dir $@)" 2>NUL || exit 0
-	$(CC) $(CFLAGS) -c $< -o $@
+# Upload with full layout (bootloader + partition + app)
+upload-all: $(IMAGE)
+	$(ESPTOOL) --chip esp32 --port $(PORT) --baud $(BAUD) write_flash -z \
+		0x1000 bootloader.bin \
+		0x8000 partition_table.bin \
+		0x10000 $(IMAGE)
 
-# Compile main.c separately
-$(MAIN_OBJ): $(MAIN_SRC)
-	@mkdir "$(dir $@)" 2>NUL || exit 0
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Ensure .o files are built before archiving
-$(ARCHIVES): $(OBJS)
-
-### === FLASH TO DEVICE ===
-flash: $(BIN)
-	esptool.exe --chip esp32 --port $(PORT) --baud $(BAUD) write_flash 0x10000 $(BIN)
-
-### === CLEANUP ===
+# Clean
 clean:
-	if exist $(BUILD_DIR) rmdir /s /q $(BUILD_DIR)
-	del /q *.elf *.bin *.o *.a 2>NUL
-
-### === NOTES ===
-# .o files are compiled source files (machine code units).
-# .a files are archives (libraries) that bundle multiple .o files together
-# and include an index for the linker to resolve symbols efficiently.
-# main.c is compiled standalone and not part of the archive system.
+	@if exist $(BUILD_DIR) rmdir /s /q $(BUILD_DIR)
+	@del /q $(TARGET) firmware*.bin 2>nul
