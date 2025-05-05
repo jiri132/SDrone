@@ -1,13 +1,13 @@
 #include "spi_registers.h"
 #include "spi.h"
-
+#include "../gpio/gpio.h"
 
 // Bit definitions (example values):
 #define SPI_USR_BIT             (1 << 18)  // When set in SPI_CMD_REG, starts a user-defined SPI transaction.
-#define SPI_USR_MOSI_BIT        (1 << 19)  // Enable MOSI phase.
-#define SPI_USR_MISO_BIT        (1 << 20)  // Enable MISO phase.
-#define SPI_USR_MOSI_HIGHPART        (1 << 27)  // Enable MOSI phase.
-#define SPI_USR_MISO_HIGHPART        (1 << 28)  // Enable MISO phase.
+#define SPI_USR_MOSI_BIT        (1 << 27)  // Enable MOSI phase. (half-duplex mode)
+#define SPI_USR_MISO_BIT        (1 << 28)  // Enable MISO phase. (half-duplex mode)
+#define SPI_USR_MOSI_HIGHPART        (1 << 25)  // MOSI data will be stored in reg W8~W15
+#define SPI_USR_MISO_HIGHPART        (1 << 24)  // MISO data will be stored in reg W8~W15
 
 
 // For this example, we assume in SPI_USER_REG that:
@@ -25,7 +25,7 @@ static const uint32_t get_mosi_data(uint8_t address) {
  *
  * This function sets the SPI mode and clock divider. It assumes that the VSPI peripheral is chosen.
  */
-void esp_spi_init(spi_mode_e mode, uint16_t clock_divider)
+void spi_init(spi_mode_e mode, uint16_t clock_divider)
 {
     // Reset or clear command register.
     SPI_CMD_REG = 0;
@@ -72,7 +72,7 @@ void esp_spi_init(spi_mode_e mode, uint16_t clock_divider)
     SPI_USER_REG |= SPI_USR_MISO_HIGHPART;
 
     // Keep Chip-Select high when idle
-    SPI_PIN_REG |= (1 << 29);
+    SPI_PIN_REG |= (1 << 30);
 }
 
 /**
@@ -81,21 +81,16 @@ void esp_spi_init(spi_mode_e mode, uint16_t clock_divider)
  * This function writes a 32-bit word to the transmit register, starts an SPI transaction,
  * waits for its completion, and then reads the received 32-bit word.
  */
-uint32_t esp_spi_transfer(uint32_t outdata)
+uint32_t spi_transfer(uint32_t outdata)
 {
-    // Write the outgoing 32-bit data into the first data register.
-    SPI_Wn_REG(0) = outdata;
+    // gpio_write(16, 1); // Turn LED ON
 
-    // Start the transaction: set the SPI_USR_BIT in the command register.
+    SPI_Wn_REG(0) = outdata;
     SPI_CMD_REG |= SPI_USR_BIT;
-    
-    // Wait until the transaction is complete.
-    // Typically, the hardware will clear the SPI_USR_BIT when the transaction is done.
-    while (SPI_CMD_REG & SPI_USR_BIT) {
-        // Busy-wait. In production code, you may add a timeout.
-    }
-    
-    // Read the incoming data from the same data register.
+    while (SPI_CMD_REG & SPI_USR_BIT); // Wait for transaction complete
+
+    // gpio_write(16, 0); // Turn LED OFF
+
     return get_mosi_data(0);
 }
 

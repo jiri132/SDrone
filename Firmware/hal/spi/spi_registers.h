@@ -1,6 +1,6 @@
 #pragma once
 
-#define SPI_BASE 0x3FF43000
+#define SPI_BASE 0x3FF65000 // SPI3 (VSPI)
 
 
 #define SPI_CMD_REG (*(volatile uint32_t*) (SPI_BASE + 0x00))
