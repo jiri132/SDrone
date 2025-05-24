@@ -1,7 +1,7 @@
 #include "circularbuffer.h"
 
 #include <stdlib.h>
-#include "configuration.h"
+
 
 typedef struct CircularBuffer {
     uint8_t *buffer;  // Pointer to dynamically allocated buffer
@@ -11,7 +11,7 @@ typedef struct CircularBuffer {
     uint16_t count;   // Number of elements in buffer
 } CircularBuffer_t;
 
-CircularBuffer_t* CreateBuffer(CircularBuffer_t *buffer, uint8_t bufferSize) {
+CircularBuffer_t* create_buffer(CircularBuffer_t *buffer, uint8_t bufferSize) {
     CircularBuffer_t *cb = (CircularBuffer_t*) malloc(sizeof(CircularBuffer_t));
     if (cb == NULL) return NULL;  // Allocation failed
 
@@ -29,12 +29,12 @@ CircularBuffer_t* CreateBuffer(CircularBuffer_t *buffer, uint8_t bufferSize) {
     return cb;
 }
 
-void ClearBuffer(CircularBuffer_t *cb) {
+void clear_buffer(CircularBuffer_t *cb) {
     free(cb->buffer);
     free(cb);
 }
 
-void WriteBuffer(CircularBuffer_t *cb, uint8_t data, bool ov) {
+void write_buffer(CircularBuffer_t *cb, uint8_t data, bool ov) {
     if (cb->count < cb->size) {
         cb->buffer[cb->head] = data;
         cb->head = (cb->head + 1) % cb->size;
@@ -47,7 +47,7 @@ void WriteBuffer(CircularBuffer_t *cb, uint8_t data, bool ov) {
     }
 }
 
-uint8_t ReadBuffer(CircularBuffer_t *cb) {
+uint8_t read_buffer(CircularBuffer_t *cb) {
     if (cb->count > 0) {
         uint8_t data = cb->buffer[cb->tail];
         cb->tail = (cb->tail+1) % cb->size;

@@ -11,7 +11,19 @@
  *
  * @note The returned configuration includes total bits, data bits, parity bits, and SECDED status.
  */
-const HammingConfig_t* Hamming_GetConfig(HammingType_e type);
+const HammingConfig_t* hamming_get_config(HammingType_e type);
+
+/**
+ * @brief Calculates the expected parity bit value for a given parity position.
+ *
+ * @param word The partially filled Hamming word including data and existing parity bits.
+ * @param parity_pos The zero-based index of the parity position (e.g., 0 for p1, 1 for p2, etc.).
+ * @return The computed parity bit (0 or 1) for the specified position.
+ *
+ * @note This function is typically used internally during both encoding and error detection.
+ */
+uint8_t hamming_calculate_parity(uint32_t word, uint8_t parity_pos);
+
 
 /**
  * @brief Encodes a data word using the selected Hamming configuration.
@@ -24,7 +36,7 @@ const HammingConfig_t* Hamming_GetConfig(HammingType_e type);
  * @note If the input data exceeds the allowable data bit width or the configuration is invalid,
  *       encoding will fail and the success flag will be false.
  */
-HammingEncodeResult_t Hamming_Encode(uint32_t data, HammingType_e type);
+HammingEncodeResult_t hamming_encode(uint32_t data, HammingType_e type);
 
 /**
  * @brief Decodes a Hamming-encoded word and performs single-bit error correction if needed.
@@ -37,15 +49,5 @@ HammingEncodeResult_t Hamming_Encode(uint32_t data, HammingType_e type);
  * @note Single-bit errors are corrected automatically. If the syndrome indicates an invalid bit position,
  *       the result will be flagged as uncorrectable.
  */
-HammingDecodeResult_t Hamming_Decode(uint32_t encoded, HammingType_e type);
+HammingDecodeResult_t hamming_decode(uint32_t encoded, HammingType_e type);
 
-/**
- * @brief Calculates the expected parity bit value for a given parity position.
- *
- * @param word The partially filled Hamming word including data and existing parity bits.
- * @param parity_pos The zero-based index of the parity position (e.g., 0 for p1, 1 for p2, etc.).
- * @return The computed parity bit (0 or 1) for the specified position.
- *
- * @note This function is typically used internally during both encoding and error detection.
- */
-uint8_t Hamming_CalculateParity(uint32_t word, uint8_t parity_pos);

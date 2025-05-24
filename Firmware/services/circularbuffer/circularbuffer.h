@@ -14,7 +14,7 @@ typedef struct CircularBuffer CircularBuffer_t;
  * 
  * @note If the buffer already contains allocated memory, it should be cleared before calling this function.
  */
-CircularBuffer_t* CreateBuffer(CircularBuffer_t *buffer, uint8_t bufferSize);
+CircularBuffer_t* create_buffer(CircularBuffer_t *buffer, uint8_t bufferSize);
 
 /**
  * @brief Clears the circular buffer and resets all positions.
@@ -23,7 +23,7 @@ CircularBuffer_t* CreateBuffer(CircularBuffer_t *buffer, uint8_t bufferSize);
  * 
  * @note This function does not free the buffer memory but resets its head, tail, and count to zero.
  */
-void ClearBuffer(CircularBuffer_t *buffer);
+void clear_buffer(CircularBuffer_t *buffer);
 
 /**
  * @brief Writes a byte of data into the circular buffer.
@@ -35,7 +35,7 @@ void ClearBuffer(CircularBuffer_t *buffer);
  * @note If the buffer is full and `ov` is false, the function will discard new data.
  * @note If `ov` is true and the buffer is full, the oldest data will be overwritten.
  */
-void WriteBuffer(CircularBuffer_t *buffer, uint8_t data, bool ov);
+void write_buffer(CircularBuffer_t *buffer, uint8_t data, bool ov);
 
 /**
  * @brief Reads a byte of data from the circular buffer.
@@ -46,4 +46,4 @@ void WriteBuffer(CircularBuffer_t *buffer, uint8_t data, bool ov);
  * @note If the buffer is empty, the function returns 0.
  * @note After reading, the tail index is incremented to point to the next available data.
  */
-uint8_t ReadBuffer(CircularBuffer_t *buffer);
+uint8_t read_buffer(CircularBuffer_t *buffer);

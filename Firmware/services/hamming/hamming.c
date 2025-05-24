@@ -21,7 +21,7 @@ const HammingConfig_t* hamming_get_config(HammingType_e type) {
     return NULL;
 }
 
-uint8_t Hamming_CalculateParity(uint32_t word, uint8_t parity_pos) {
+uint8_t hamming_calculate_parity(uint32_t word, uint8_t parity_pos) {
     uint8_t parity = 0;
     for (uint8_t i = 0; i < 32; i++) {
         if (i == parity_pos) continue;
@@ -32,8 +32,8 @@ uint8_t Hamming_CalculateParity(uint32_t word, uint8_t parity_pos) {
     return parity;
 }
 
-HammingEncodeResult_t Hamming_Encode(uint32_t data, HammingType_e type) {
-    const HammingConfig_t *cfg = Hamming_GetConfig(type);
+HammingEncodeResult_t hamming_encode(uint32_t data, HammingType_e type) {
+    const HammingConfig_t *cfg = hamming_get_config(type);
     HammingEncodeResult_t result = { .success = false };
 
     if (!cfg || cfg->data_bits > 26 || cfg->total_bits > 32) return result;
@@ -49,7 +49,7 @@ HammingEncodeResult_t Hamming_Encode(uint32_t data, HammingType_e type) {
     }
 
     for (uint8_t i = 0; i < cfg->parity_bits; ++i) {
-        uint8_t parity = Hamming_CalculateParity(encoded, i);
+        uint8_t parity = hamming_calculate_parity(encoded, i);
         encoded |= (parity << ((1 << i) - 1));
     }
 
@@ -63,15 +63,15 @@ HammingEncodeResult_t Hamming_Encode(uint32_t data, HammingType_e type) {
     return result;
 }
 
-HammingDecodeResult_t Hamming_Decode(uint32_t encoded, HammingType_e type) {
-    const HammingConfig_t *cfg = Hamming_GetConfig(type);
+HammingDecodeResult_t hamming_decode(uint32_t encoded, HammingType_e type) {
+    const HammingConfig_t *cfg = hamming_get_config(type);
     HammingDecodeResult_t result = { .uncorrectable = false };
 
     if (!cfg) return result;
 
     uint8_t syndrome = 0;
     for (uint8_t i = 0; i < cfg->parity_bits; ++i) {
-        uint8_t parity = Hamming_CalculateParity(encoded, i);
+        uint8_t parity = hamming_calculate_parity(encoded, i);
         parity ^= (encoded >> ((1 << i) - 1)) & 1;
         if (parity) syndrome |= (1 << i);
     }
