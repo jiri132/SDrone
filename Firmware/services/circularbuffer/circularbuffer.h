@@ -3,7 +3,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef struct CircularBuffer CircularBuffer_t;
+typedef struct CircularBuffer {
+    uint8_t *data;  // Pointer to dynamically allocated buffer
+    uint16_t size;    // Buffer capacity
+    uint16_t head;    // Write position
+    uint16_t tail;    // Read position
+    uint16_t count;   // Number of elements in buffer
+} CircularBuffer_t;
 
 /**
  * @brief Initializes and allocates memory for a circular buffer.
@@ -47,3 +53,43 @@ void write_buffer(CircularBuffer_t *buffer, uint8_t data, bool ov);
  * @note After reading, the tail index is incremented to point to the next available data.
  */
 uint8_t read_buffer(CircularBuffer_t *buffer);
+
+/**
+ * @brief Checks if the circular buffer is currently empty.
+ * 
+ * @param buffer Pointer to the CircularBuffer_t struct.
+ * @return true if empty, false otherwise.
+ */
+bool buffer_is_empty(const CircularBuffer_t* buffer);
+
+/**
+ * @brief Checks if the circular buffer is full.
+ * 
+ * @param buffer Pointer to the CircularBuffer_t struct.
+ * @return true if full, false otherwise.
+ */
+bool buffer_is_full(const CircularBuffer_t* buffer);
+
+/**
+ * @brief Peeks at the oldest byte without removing it from the buffer.
+ * 
+ * @param buffer Pointer to the CircularBuffer_t struct.
+ * @return uint8_t The oldest byte in the buffer, or 0 if empty.
+ */
+uint8_t buffer_peek(const CircularBuffer_t* buffer);
+
+/**
+ * @brief Returns the number of bytes currently stored in the buffer.
+ * 
+ * @param buffer Pointer to the CircularBuffer_t struct.
+ * @return Number of elements in the buffer.
+ */
+uint8_t buffer_size(const CircularBuffer_t* buffer);
+
+/**
+ * @brief Returns the number of free bytes left in the buffer.
+ * 
+ * @param buffer Pointer to the CircularBuffer_t struct.
+ * @return Number of free slots available.
+ */
+uint8_t buffer_space_left(const CircularBuffer_t* buffer);
