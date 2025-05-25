@@ -5,7 +5,7 @@
 /**
  * @brief Enum representing LoRa operating modes for the SX1278.
  */
-typedef enum {
+typedef enum sx1278_mode {
     SX1278_MODE_SLEEP = 0x00,  /**< Low-power sleep mode */
     SX1278_MODE_STDBY = 0x01,  /**< Standby mode, oscillator on */
     SX1278_MODE_TX    = 0x03,  /**< Transmit mode */
@@ -55,7 +55,7 @@ bool sx1278_is_receiving(void);
  * 
  * This function toggles the RESET pin according to the timing requirements in the datasheet.
  * 
- * @note Requires correct GPIO setup via your HAL.
+ * @note Requires correct GPIO reset-pin setup.
  */
 void sx1278_reset(void);
 

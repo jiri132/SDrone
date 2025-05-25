@@ -4,7 +4,7 @@
 /**
  * @brief Initializes the SPI peripheral for SX1278 communication.
  * 
- * This may call into your general SPI HAL (e.g., spi_init()).
+ * This calls general SPI HAL (spi_init()) with mode 0.
  */
 void sx1278_spi_init(void);
 
