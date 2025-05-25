@@ -10,12 +10,17 @@
 #define GPIO_OUT_REG         (*(volatile uint32_t*)(GPIO_BASE + 0x04))
 #define GPIO_IN_REG          (*(volatile uint32_t*)(GPIO_BASE + 0x3C))
 
+#define MAX_GPIO_PINS 40
+
+static uint8_t queued_states[MAX_GPIO_PINS];
+static bool queued_mask[MAX_GPIO_PINS];
+
 static inline volatile uint32_t* gpio_io_mux(uint8_t pin) {
     return (volatile uint32_t*)(IO_MUX_BASE + pin * 4);
 }
 
-void gpio_configure(const gpio_config_t* cfg) {
-    if (cfg->pin >= 40) return;
+void gpio_configure_pin(const gpio_config_t* cfg) {
+    if (cfg->pin >= MAX_GPIO_PINS) return;
 
     // IO_MUX handling (only valid for pins 0–33)
     if (cfg->pin <= 33) {
@@ -48,8 +53,8 @@ void gpio_configure(const gpio_config_t* cfg) {
 }
 
 
-void gpio_write(uint8_t pin, uint8_t level) {
-    if (pin >= 40) return;
+void gpio_set_pin(uint8_t pin, uint8_t level) {
+    if (pin >= MAX_GPIO_PINS) return;
 
     if (pin < 32) {
         if (level)
@@ -65,8 +70,8 @@ void gpio_write(uint8_t pin, uint8_t level) {
 }
 
 
-void gpio_toggle(uint8_t pin) {
-    if (pin >= 40) return;
+void gpio_toggle_pin(uint8_t pin) {
+    if (pin >= MAX_GPIO_PINS) return;
 
     if (pin < 32) {
         GPIO_OUT_REG ^= (1 << pin);
@@ -77,12 +82,52 @@ void gpio_toggle(uint8_t pin) {
 }
 
 
-uint8_t gpio_read(uint8_t pin) {
-    if (pin >= 40) return 0;
+uint8_t gpio_read_pin(uint8_t pin) {
+    if (pin >= MAX_GPIO_PINS) return 0;
 
     if (pin < 32) {
         return (GPIO_IN_REG >> pin) & 0x1;
     } else {
         return (*(volatile uint32_t*)(GPIO_BASE + 0x40) >> (pin - 32)) & 0x1; // GPIO_IN1_REG
     }
+}
+
+void gpio_queue_pin_state(uint8_t pin, uint8_t level) {
+    if (pin >= MAX_GPIO_PINS) return;
+    queued_states[pin] = level;
+    queued_mask[pin] = true;
+}
+
+void gpio_clear_queued_pin(uint8_t pin) {
+    if (pin >= MAX_GPIO_PINS) return;
+    queued_mask[pin] = false;
+}
+
+void gpio_commit_queue(void) {
+    for (uint8_t pin = 0; pin < MAX_GPIO_PINS; ++pin) {
+        if (queued_mask[pin]) {
+            gpio_set_pin(pin, queued_states[pin]);
+            queued_mask[pin] = false;
+        }
+    }
+}
+
+bool gpio_pin_active(uint8_t pin) {
+    if (pin >= MAX_GPIO_PINS) return false;
+    return gpio_read_pin(pin) == 1;
+}
+
+bool gpio_is_output(uint8_t pin) {
+    if (pin >= MAX_GPIO_PINS) return false;
+    if (pin < 32) {
+        volatile uint32_t* enable_reg = (volatile uint32_t*)(0x3FF44020); // GPIO_ENABLE_REG
+        return (*enable_reg & (1 << pin)) != 0;
+    } else {
+        volatile uint32_t* enable1_reg = (volatile uint32_t*)(0x3FF4402C); // GPIO_ENABLE1_REG
+        return (*enable1_reg & (1 << (pin - 32))) != 0;
+    }
+}
+
+bool gpio_is_input(uint8_t pin) {
+    return !gpio_is_output(pin);
 }
