@@ -9,8 +9,9 @@ static spi_device_handle_t spi_handle;
  * 
  * @param mode SPI mode (0–3)
  */
-void spi_init(uint8_t mode) {
+void spi_init(uint8_t mode, float clock_speed) {
     if (mode >= 4) {return;}
+    if (clock_speed > 20 || clock_speed <= 0.04f)
 
     spi_bus_config_t buscfg = {
         .mosi_io_num = SPI_MOSI,
@@ -21,8 +22,8 @@ void spi_init(uint8_t mode) {
     };
 
     spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = 1 * 1000 * 1000, // 1 MHz (SX1278 can handle this)
-        .mode = 0, // CPOL=0, CPHA=0
+        .clock_speed_hz = clock_speed * 1000 * 1000,
+        .mode = mode, // CPOL=0, CPHA=0
         .spics_io_num = SPI_CS,
         .queue_size = 1,
     };

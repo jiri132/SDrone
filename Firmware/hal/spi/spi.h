@@ -9,7 +9,7 @@
  * 
  * @param mode SPI mode (0–3)
  */
-void spi_init(uint8_t mode);
+void spi_init(uint8_t mode,  float clock_speed);
 
 /**
  * @brief Transfers data over SPI.
